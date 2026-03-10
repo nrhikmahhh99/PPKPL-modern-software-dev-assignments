@@ -15,8 +15,17 @@ Keep the implementation minimal.
 """
 
 # TODO: Fill this in!
-YOUR_REFLEXION_PROMPT = ""
-
+YOUR_REFLEXION_PROMPT = """
+You are a senior developer. You must fix the provided Python function so it passes ALL test cases.
+Look closely at the 'Failing checks' provided in the context.
+The function MUST check for all these criteria:
+1. Length at least 8 characters.
+2. At least one lowercase letter.
+3. At least one uppercase letter.
+4. At least one digit.
+5. At least one special character from this set: !@#$%^&*()-_
+Output ONLY the corrected Python code block.
+"""
 
 # Ground-truth test suite used to evaluate generated code
 SPECIALS = set("!@#$%^&*()-_")
@@ -92,11 +101,15 @@ def generate_initial_function(system_prompt: str) -> str:
 
 
 def your_build_reflexion_context(prev_code: str, failures: List[str]) -> str:
-    """TODO: Build the user message for the reflexion step using prev_code and failures.
-
-    Return a string that will be sent as the user content alongside the reflexion system prompt.
     """
-    return ""
+    Menyusun pesan untuk AI yang berisi kode yang salah dan alasan kenapa salah.
+    """
+    failure_msg = "\n".join([f"- {f}" for f in failures])
+    return (
+        f"The previous code was:\n```python\n{prev_code}\n```\n\n"
+        f"It failed the following tests:\n{failure_msg}\n\n"
+        "Please fix the code to handle uppercase, digits, and special characters (!@#$%^&*()-_)."
+    )
 
 
 def apply_reflexion(

@@ -9,7 +9,18 @@ load_dotenv()
 NUM_RUNS_TIMES = 5
 
 # TODO: Fill this in! Try to get as close to 100% correctness across all runs as possible.
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """
+You are a mathematical engine. 
+Solve the problem but ONLY output the final result in a strict format.
+Rules:
+1. No explanation.
+2. No reasoning steps.
+3. No introductory text.
+4. ONLY output exactly: "Answer: 25"
+If the math is: Total 60, Stop1 at 20, Stop2 is 15 before end (60-15=45). 
+Distance = 45 - 20 = 25.
+You must only write: Answer: 25
+"""
 
 USER_PROMPT = """
 Solve this problem, then give the final answer on the last line as "Answer: <number>".

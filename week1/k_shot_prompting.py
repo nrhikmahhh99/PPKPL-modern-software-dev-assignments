@@ -7,7 +7,30 @@ load_dotenv()
 NUM_RUNS_TIMES = 5
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """
+You are a precise character-level manipulation assistant. 
+To reverse a word, think about each letter one by one in reverse order.
+Only output the final reversed word. No explanation, no spaces between letters in the final output.
+
+Examples:
+Input: apple
+Output: elppa
+
+Input: banana
+Output: ananab
+
+Input: microchip
+Output: pihcorcim
+
+Input: newsletter
+Output: rettelswen
+
+Input: javascript
+Output: tpircsavaj
+
+Input: httpstatus
+Output: sutatsptth
+"""
 
 USER_PROMPT = """
 Reverse the order of letters in the following word. Only output the reversed word, no other text:

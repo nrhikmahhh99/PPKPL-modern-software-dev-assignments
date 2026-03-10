@@ -1,30 +1,45 @@
+"""Database layer for SQLite persistence."""
+
 from __future__ import annotations
 
 import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional
-
+from typing import Iterator, Optional
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = DATA_DIR / "app.db"
 
 
-def ensure_data_directory_exists() -> None:
+def _ensure_data_directory() -> None:
+    """Create the data directory if it does not exist."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def get_connection() -> sqlite3.Connection:
-    ensure_data_directory_exists()
+@contextmanager
+def get_connection() -> Iterator[sqlite3.Connection]:
+    """Yield a database connection with proper cleanup.
+    Connections use sqlite3.Row for dict-like row access.
+    """
+    _ensure_data_directory()
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
-    return connection
+    try:
+        yield connection
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
 
 
 def init_db() -> None:
-    ensure_data_directory_exists()
-    with get_connection() as connection:
-        cursor = connection.cursor()
+    """Initialize database tables. Safe to call multiple times (idempotent)."""
+    _ensure_data_directory()
+    with get_connection() as conn:
+        cursor = conn.cursor()
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS notes (
@@ -46,52 +61,55 @@ def init_db() -> None:
             );
             """
         )
-        connection.commit()
 
 
 def insert_note(content: str) -> int:
-    with get_connection() as connection:
-        cursor = connection.cursor()
+    """Insert a note and return its id."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
         cursor.execute("INSERT INTO notes (content) VALUES (?)", (content,))
-        connection.commit()
-        return int(cursor.lastrowid)
+        return int(cursor.lastrowid)  # type: ignore[union-attr]
 
 
 def list_notes() -> list[sqlite3.Row]:
-    with get_connection() as connection:
-        cursor = connection.cursor()
+    """Return all notes, newest first."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
         cursor.execute("SELECT id, content, created_at FROM notes ORDER BY id DESC")
         return list(cursor.fetchall())
 
 
 def get_note(note_id: int) -> Optional[sqlite3.Row]:
-    with get_connection() as connection:
-        cursor = connection.cursor()
+    """Return a note by id, or None if not found."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
         cursor.execute(
             "SELECT id, content, created_at FROM notes WHERE id = ?",
             (note_id,),
         )
-        row = cursor.fetchone()
-        return row
+        return cursor.fetchone()
 
 
 def insert_action_items(items: list[str], note_id: Optional[int] = None) -> list[int]:
-    with get_connection() as connection:
-        cursor = connection.cursor()
+    """Insert action items and return their ids."""
+    if not items:
+        return []
+    with get_connection() as conn:
+        cursor = conn.cursor()
         ids: list[int] = []
         for item in items:
             cursor.execute(
                 "INSERT INTO action_items (note_id, text) VALUES (?, ?)",
                 (note_id, item),
             )
-            ids.append(int(cursor.lastrowid))
-        connection.commit()
+            ids.append(int(cursor.lastrowid))  # type: ignore[union-attr]
         return ids
 
 
 def list_action_items(note_id: Optional[int] = None) -> list[sqlite3.Row]:
-    with get_connection() as connection:
-        cursor = connection.cursor()
+    """Return action items, optionally filtered by note_id."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
         if note_id is None:
             cursor.execute(
                 "SELECT id, note_id, text, done, created_at FROM action_items ORDER BY id DESC"
@@ -104,13 +122,29 @@ def list_action_items(note_id: Optional[int] = None) -> list[sqlite3.Row]:
         return list(cursor.fetchall())
 
 
+def get_action_item(action_item_id: int) -> Optional[sqlite3.Row]:
+    """Return an action item by id, or None if not found."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, note_id, text, done, created_at FROM action_items WHERE id = ?",
+            (action_item_id,),
+        )
+        return cursor.fetchone()
+
+
 def mark_action_item_done(action_item_id: int, done: bool) -> None:
-    with get_connection() as connection:
-        cursor = connection.cursor()
+    """Mark an action item as done or not done.
+    Raises:
+        ValueError: If the action item does not exist.
+    """
+    if get_action_item(action_item_id) is None:
+        raise ValueError("action item not found")
+    with get_connection() as conn:
+        cursor = conn.cursor()
         cursor.execute(
             "UPDATE action_items SET done = ? WHERE id = ?",
             (1 if done else 0, action_item_id),
         )
-        connection.commit()
 
 

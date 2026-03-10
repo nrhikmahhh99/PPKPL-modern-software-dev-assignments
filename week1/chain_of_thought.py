@@ -8,8 +8,15 @@ load_dotenv()
 NUM_RUNS_TIMES = 5
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
-
+YOUR_SYSTEM_PROMPT = YOUR_SYSTEM_PROMPT = """
+Anda adalah asisten yang sangat logis dan teliti. 
+Saat diberikan masalah logika atau matematika, jangan langsung memberikan jawaban.
+Gunakan format berikut:
+1. Uraikan apa yang diketahui dari soal.
+2. Langkah-langkahnya tunjukkan proses berpikir atau perhitungan secara bertahap.
+3. Jawaban Akhirnya berikan jawaban singkat di bagian paling akhir.
+Pastikan berpikir langkah demi langkah (let's think step by step).
+"""
 
 USER_PROMPT = """
 Solve this problem, then give the final answer on the last line as "Answer: <number>".

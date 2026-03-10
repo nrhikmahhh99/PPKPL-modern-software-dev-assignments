@@ -13,6 +13,7 @@
       .item { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
       .muted { color: #6b7280; font-size: 0.875rem; }
       .row { display: flex; gap: 0.5rem; align-items: center; }
+      .note-item { padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb; }
     </style>
   </head>
   <body>
@@ -24,50 +25,18 @@
     <div class="row">
       <label class="row"><input id="save_note" type="checkbox" checked /> Save as note</label>
       <button id="extract">Extract</button>
+      <button id="extract-llm">Extract LLM</button>
     </div>
 
     <div class="items" id="items"></div>
 
-    <script>
-      const $ = (sel) => document.querySelector(sel);
-      const itemsEl = $('#items');
-      const btn = $('#extract');
-      btn.addEventListener('click', async () => {
-        const text = $('#text').value;
-        const save = $('#save_note').checked;
-        itemsEl.textContent = 'Extracting...';
-        try {
-          const res = await fetch('/action-items/extract', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text, save_note: save }),
-          });
-          if (!res.ok) throw new Error('Request failed');
-          const data = await res.json();
-          if (!data.items || data.items.length === 0) {
-            itemsEl.innerHTML = '<p class="muted">No action items found.</p>';
-            return;
-          }
-          itemsEl.innerHTML = data.items.map(it => (
-            `<div class="item"><input type="checkbox" data-id="${it.id}" /> <span>${it.text}</span></div>`
-          )).join('');
-          itemsEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', async (e) => {
-              const id = e.target.getAttribute('data-id');
-              await fetch(`/action-items/${id}/done`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ done: e.target.checked }),
-              });
-            });
-          });
-        } catch (err) {
-          console.error(err);
-          itemsEl.textContent = 'Error extracting items';
-        }
-      });
+    <h2 style="margin-top: 2rem;">Notes</h2>
+    <div class="row">
+      <button id="list-notes">List Notes</button>
+    </div>
+    <div class="notes-list" id="notes-list" style="margin-top: 0.5rem;"></div>
 
-    </script>
+    <script src="/static/app.js"></script>
   </body>
   </html>
 

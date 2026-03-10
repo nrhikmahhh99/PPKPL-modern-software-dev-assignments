@@ -37,8 +37,17 @@ QUESTION = (
 
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
-
+YOUR_SYSTEM_PROMPT = """
+You are a precise coding assistant. 
+You MUST use the exact information provided in the Context and NOTHING else.
+Instructions:
+1. Use the exact Base URL from the context: https://api.example.com/v1
+2. Use the exact Authentication header from the context: X-API-Key
+3. Use the exact endpoint: /users/{id}
+4. Return only the user's name as a string.
+5. If the status code is not 200, raise an exception.
+Output only the Python code block. No explanations.
+"""
 
 # For this simple example
 # For this coding task, validate by required snippets rather than exact string
@@ -52,9 +61,9 @@ REQUIRED_SNIPPETS = [
 
 
 def YOUR_CONTEXT_PROVIDER(corpus: List[str]) -> List[str]:
-    """TODO: Select and return the relevant subset of documents from CORPUS for this task.
-
-    For example, return [] to simulate missing context, or [corpus[0]] to include the API docs.
+    """
+    Memilih dokumen yang relevan dari CORPUS. 
+    Karena CORPUS berisi isi dari api_docs.txt, kita harus mengembalikannya agar AI bisa membaca.
     """
     return []
 
