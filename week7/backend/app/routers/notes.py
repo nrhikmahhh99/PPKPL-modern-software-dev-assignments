@@ -1,3 +1,4 @@
+# Task 1 endpoints for week 7
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
