@@ -1,8 +1,10 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import asc, desc, select, text
+from sqlalchemy import asc, desc, select, sql, text
 from sqlalchemy.orm import Session
+
+from week5.backend.app import db
 
 from ..db import get_db
 from ..models import Note
@@ -69,15 +71,16 @@ def get_note(note_id: int, db: Session = Depends(get_db)) -> NoteRead:
 @router.get("/unsafe-search", response_model=list[NoteRead])
 def unsafe_search(q: str, db: Session = Depends(get_db)) -> list[NoteRead]:
     sql = text(
-        f"""
-        SELECT id, title, content, created_at, updated_at
-        FROM notes
-        WHERE title LIKE '%{q}%' OR content LIKE '%{q}%'
-        ORDER BY created_at DESC
-        LIMIT 50
-        """
+    """
+    SELECT id, title, content, created_at, updated_at
+    FROM notes
+    WHERE title LIKE :q OR content LIKE :q
+    ORDER BY created_at DESC
+    LIMIT 50
+    """
     )
-    rows = db.execute(sql).all()
+    # Masukkan variabel q dengan aman melalui execute binding
+    rows = db.execute(sql, {"q": f"%{q}%"}).all()
     results: list[NoteRead] = []
     for r in rows:
         results.append(

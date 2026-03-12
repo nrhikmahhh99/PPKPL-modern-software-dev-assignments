@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import asc, desc, select
 from sqlalchemy.orm import Session
 
@@ -44,7 +44,11 @@ def create_note(payload: NoteCreate, db: Session = Depends(get_db)) -> NoteRead:
 
 
 @router.patch("/{note_id}", response_model=NoteRead)
-def patch_note(note_id: int, payload: NotePatch, db: Session = Depends(get_db)) -> NoteRead:
+def patch_note(
+    payload: NotePatch,
+    note_id: int = Path(..., gt=0, description="Note ID"),
+    db: Session = Depends(get_db),
+) -> NoteRead:
     note = db.get(Note, note_id)
     if not note:
         raise HTTPException(status_code=404, detail="Note not found")
@@ -59,10 +63,22 @@ def patch_note(note_id: int, payload: NotePatch, db: Session = Depends(get_db)) 
 
 
 @router.get("/{note_id}", response_model=NoteRead)
-def get_note(note_id: int, db: Session = Depends(get_db)) -> NoteRead:
+def get_note(
+    note_id: int = Path(..., gt=0, description="Note ID"),
+    db: Session = Depends(get_db),
+) -> NoteRead:
     note = db.get(Note, note_id)
     if not note:
         raise HTTPException(status_code=404, detail="Note not found")
     return NoteRead.model_validate(note)
 
 
+@router.delete("/{note_id}", status_code=204)
+def delete_note(
+    note_id: int = Path(..., gt=0, description="Note ID"),
+    db: Session = Depends(get_db),
+) -> None:
+    note = db.get(Note, note_id)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    db.delete(note)
