@@ -89,3 +89,12 @@ class MarkDoneResponse(BaseModel):
 
     id: int
     done: bool
+
+# --- Delete response (optional, for consistency) ---
+
+
+class DeleteResponse(BaseModel):
+    """Response schema for delete operations."""
+
+    message: str = "deleted successfully"
+
