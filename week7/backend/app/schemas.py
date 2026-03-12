@@ -80,3 +80,11 @@ class ActionItemPatch(BaseModel):
         return stripped
 
 
+class ExtractedActionItem(BaseModel):
+    """Schema for a single extracted action item with optional metadata."""
+
+    description: str = Field(..., min_length=1)
+    due_date: str | None = Field(None, description="Parsed due date or deadline")
+    assignee: str | None = Field(None, description="Parsed assignee or owner")
+
+
