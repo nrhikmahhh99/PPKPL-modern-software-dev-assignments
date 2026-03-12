@@ -88,3 +88,42 @@ class ExtractedActionItem(BaseModel):
     assignee: str | None = Field(None, description="Parsed assignee or owner")
 
 
+# --- Tag schemas ---
+
+
+class TagCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50, description="Tag name")
+
+    @field_validator("name")
+    @classmethod
+    def strip_whitespace(cls, v: str) -> str:
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("Tag name cannot be empty or whitespace only")
+        return stripped
+
+
+class TagRead(BaseModel):
+    id: int
+    name: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TagPatch(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=50)
+
+    @field_validator("name")
+    @classmethod
+    def strip_whitespace(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("Tag name cannot be empty or whitespace only")
+        return stripped
+
+
